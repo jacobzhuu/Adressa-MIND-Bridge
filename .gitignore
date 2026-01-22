@@ -1,0 +1,8 @@
+MINDlarge/
+MINDsmall/
+adressa_one_week*/
+artifacts/
+cache/
+__pycache__/
+*.pyc
+.DS_Store
