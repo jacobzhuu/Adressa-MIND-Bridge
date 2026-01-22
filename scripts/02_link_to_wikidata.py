@@ -15,11 +15,17 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 from adressa_entity.wikidata import WikidataSearcher, ner_type_to_mind_type
 
 
+DEFAULT_CACHE_DB = Path("outputs/cache/wikidata_search.sqlite")
+LEGACY_CACHE_DB = Path("cache/wikidata_search.sqlite")
+if LEGACY_CACHE_DB.exists() and not DEFAULT_CACHE_DB.exists():
+    DEFAULT_CACHE_DB = LEGACY_CACHE_DB
+
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Link NER mentions to Wikidata QIDs via Wikidata search API.")
     p.add_argument("--mentions_jsonl", type=Path, required=True, help="Input JSONL from 01_ner_titles_nbbert.py")
     p.add_argument("--output_jsonl", type=Path, required=True, help="Output JSONL with linked mentions.")
-    p.add_argument("--cache_db", type=Path, default=Path("cache/wikidata_search.sqlite"))
+    p.add_argument("--cache_db", type=Path, default=DEFAULT_CACHE_DB)
     p.add_argument("--lang", type=str, default="nb")
     p.add_argument("--limit_n", type=int, default=10)
     p.add_argument("--sleep", type=float, default=0.0, help="Sleep between uncached API calls (seconds).")

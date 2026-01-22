@@ -29,6 +29,22 @@ WIKIDATA_WIKI_RE = re.compile(r"^https?://www\.wikidata\.org/wiki/(Q[1-9]\d*)$",
 NUM_RE = re.compile(r"^[1-9]\d*$")
 
 
+def _default_data_root() -> Path:
+    preferred = Path("data/work/adressa_one_week_mind_final")
+    legacy = Path("adressa_one_week_mind_final")
+    if legacy.exists() and not preferred.exists():
+        return legacy
+    return preferred
+
+
+def _default_artifacts_dir() -> Path:
+    preferred = Path("outputs/artifacts")
+    legacy = Path("artifacts")
+    if legacy.exists() and not preferred.exists():
+        return legacy
+    return preferred
+
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Diagnose low Wikidata QID coverage vs MIND entity embeddings (format issues, id type issues, EL quality)."
@@ -43,7 +59,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--data_root",
         type=Path,
-        default=Path("adressa_one_week_mind_final"),
+        default=_default_data_root(),
         help="Dataset root containing {train,val,test}/news.tsv (used when --news_tsv is omitted).",
     )
     p.add_argument(
@@ -70,7 +86,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--artifacts_dir",
         type=Path,
-        default=Path("artifacts"),
+        default=_default_artifacts_dir(),
         help="Artifacts dir used for auto-discovery of *.mentions.jsonl / *.linked.jsonl when args not provided.",
     )
     p.add_argument("--max_examples", type=int, default=20, help="Max examples to print per suspicious category.")
@@ -571,4 +587,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -37,12 +37,29 @@ log_config() {
   echo -e "  ${MAGENTA}•${NC} $1"
 }
 
+# 路径兼容（新结构优先，旧结构回退）
+resolve_dir_default() {
+  local preferred="$1"
+  local legacy="$2"
+  if [[ -d "$preferred" ]]; then
+    echo "$preferred"
+  elif [[ -d "$legacy" ]]; then
+    echo "$legacy"
+  else
+    echo "$preferred"
+  fi
+}
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # 配置
 # ═══════════════════════════════════════════════════════════════════════════════
-DATA_ROOT="${DATA_ROOT:-adressa_one_week_mind_final}"
-ARTIFACTS_DIR="${ARTIFACTS_DIR:-artifacts}"
-CACHE_DIR="${CACHE_DIR:-cache}"
+DEFAULT_DATA_ROOT="$(resolve_dir_default "data/work/adressa_one_week_mind_final" "adressa_one_week_mind_final")"
+DEFAULT_ARTIFACTS_DIR="$(resolve_dir_default "outputs/artifacts" "artifacts")"
+DEFAULT_CACHE_DIR="$(resolve_dir_default "outputs/cache" "cache")"
+
+DATA_ROOT="${DATA_ROOT:-$DEFAULT_DATA_ROOT}"
+ARTIFACTS_DIR="${ARTIFACTS_DIR:-$DEFAULT_ARTIFACTS_DIR}"
+CACHE_DIR="${CACHE_DIR:-$DEFAULT_CACHE_DIR}"
 
 export DATA_ROOT
 
@@ -52,8 +69,8 @@ NER_MAX_LENGTH="${NER_MAX_LENGTH:-128}"
 NER_AGGREGATION_STRATEGY="${NER_AGGREGATION_STRATEGY:-simple}"
 NER_DEVICE="${NER_DEVICE:--1}" # -1 CPU
 NER_HEURISTIC_MODE="${NER_HEURISTIC_MODE:-fallback}"  # off|fallback|merge
-NER_HEURISTIC_MAX_MENTIONS="${NER_HEURISTIC_MAX_MENTIONS:-6}"
-NER_HEURISTIC_SCORE="${NER_HEURISTIC_SCORE:-0.45}"
+NER_HEURISTIC_MAX_MENTIONS="${NER_HEURISTIC_MAX_MENTIONS:-4}"
+NER_HEURISTIC_SCORE="${NER_HEURISTIC_SCORE:-0.35}"
 NER_HEURISTIC_MAX_SPAN_CHARS="${NER_HEURISTIC_MAX_SPAN_CHARS:-60}"
 NER_HEURISTIC_MAX_SPAN_TOKENS="${NER_HEURISTIC_MAX_SPAN_TOKENS:-6}"
 NER_HEURISTIC_MIN_FIRST_TOKEN_LEN="${NER_HEURISTIC_MIN_FIRST_TOKEN_LEN:-0}"
@@ -67,7 +84,7 @@ WIKIDATA_RETRY_BASE_SLEEP="${WIKIDATA_RETRY_BASE_SLEEP:-2}"
 WIKIDATA_RETRY_MAX_SLEEP="${WIKIDATA_RETRY_MAX_SLEEP:-120}"
 WIKIDATA_MAX_CONSEC_ERRORS="${WIKIDATA_MAX_CONSEC_ERRORS:-1000}"
 WIKIDATA_MIN_MATCH="${WIKIDATA_MIN_MATCH:-0.6}"
-WIKIDATA_MIN_MATCH_HEUR="${WIKIDATA_MIN_MATCH_HEUR:-0.85}"
+WIKIDATA_MIN_MATCH_HEUR="${WIKIDATA_MIN_MATCH_HEUR:-0.92}"
 WIKIDATA_TRUST_ENV="${WIKIDATA_TRUST_ENV:-0}" # 0 -> --no-trust-env (recommended if you have system proxy issues)
 
 LIMIT="${LIMIT:-}"
@@ -239,7 +256,12 @@ import pandas as pd
 
 qid_re = re.compile(r"^Q\d+$")
 
-data_root = Path(__import__("os").environ.get("DATA_ROOT", "adressa_one_week_mind_final"))
+import os
+
+data_root = Path(os.environ.get("DATA_ROOT", "data/work/adressa_one_week_mind_final"))
+legacy_root = Path("adressa_one_week_mind_final")
+if not data_root.exists() and legacy_root.exists():
+    data_root = legacy_root
 for sp in ["train", "val", "test"]:
     p = data_root / sp / "news.tsv"
     if not p.exists():

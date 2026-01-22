@@ -1,7 +1,10 @@
+data/
+outputs/
 MINDlarge/
 MINDsmall/
 adressa_one_week/
 adressa_one_week_mind_base/
+adressa_one_week_mind_final/
 artifacts/
 cache/
 __pycache__/

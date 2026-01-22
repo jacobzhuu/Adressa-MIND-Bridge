@@ -50,12 +50,20 @@ def log_result(label, value, indent=True):
 
 DEFAULT_CATEGORY = "news"
 DEFAULT_SUBCATEGORY = "news"
+DEFAULT_OUTPUT_DIR = "data/base/adressa_one_week_mind_base"
+if os.path.isdir("adressa_one_week_mind_base") and not os.path.isdir(DEFAULT_OUTPUT_DIR):
+    DEFAULT_OUTPUT_DIR = "adressa_one_week_mind_base"
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Convert one_week to MINDsmall-like format")
     parser.add_argument("--input", type=str, required=True, help="Input directory containing one_week files")
-    parser.add_argument("--output", type=str, required=True, help="Output directory for MIND-style splits")
+    parser.add_argument(
+        "--output",
+        type=str,
+        default=DEFAULT_OUTPUT_DIR,
+        help="Output directory for MIND-style splits",
+    )
     parser.add_argument("--neg-ratio", type=int, default=4, help="Number of negatives per positive impression")
     parser.add_argument(
         "--split",

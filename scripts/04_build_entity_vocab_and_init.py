@@ -17,6 +17,12 @@ from adressa_entity.embedding_vec import load_vec_subset, write_vec
 from adressa_entity.news_tsv import iter_news_tsv
 
 
+DEFAULT_MIND_VEC = Path("data/mind/MINDsmall/train/entity_embedding.vec")
+LEGACY_MIND_VEC = Path("MINDsmall/train/entity_embedding.vec")
+if LEGACY_MIND_VEC.exists() and not DEFAULT_MIND_VEC.exists():
+    DEFAULT_MIND_VEC = LEGACY_MIND_VEC
+
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Build Adressa entity vocab and initialize vectors from MIND embeddings.")
     p.add_argument(
@@ -30,7 +36,7 @@ def parse_args() -> argparse.Namespace:
         "--mind_entity_vec",
         type=Path,
         nargs="+",
-        default=[Path("MINDsmall/train/entity_embedding.vec")],
+        default=[DEFAULT_MIND_VEC],
         help="One or more MIND entity_embedding.vec paths (used for initialization; later files fill missing QIDs).",
     )
     p.add_argument("--output_dir", type=Path, required=True)

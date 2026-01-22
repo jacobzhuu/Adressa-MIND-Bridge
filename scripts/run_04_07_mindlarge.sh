@@ -36,16 +36,49 @@ log_result() {
   echo -e "  ${GREEN}│${NC} $1"
 }
 
+# 路径兼容（新结构优先，旧结构回退）
+resolve_dir_default() {
+  local preferred="$1"
+  local legacy="$2"
+  if [[ -d "$preferred" ]]; then
+    echo "$preferred"
+  elif [[ -d "$legacy" ]]; then
+    echo "$legacy"
+  else
+    echo "$preferred"
+  fi
+}
+
+resolve_file_default() {
+  local preferred="$1"
+  local legacy="$2"
+  if [[ -f "$preferred" ]]; then
+    echo "$preferred"
+  elif [[ -f "$legacy" ]]; then
+    echo "$legacy"
+  else
+    echo "$preferred"
+  fi
+}
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # 配置
 # ═══════════════════════════════════════════════════════════════════════════════
-DATA_ROOT="${DATA_ROOT:-adressa_one_week_mind_final}"
-ARTIFACTS_DIR="${ARTIFACTS_DIR:-artifacts}"
-CACHE_DIR="${CACHE_DIR:-cache}"
+DEFAULT_DATA_ROOT="$(resolve_dir_default "data/work/adressa_one_week_mind_final" "adressa_one_week_mind_final")"
+DEFAULT_ARTIFACTS_DIR="$(resolve_dir_default "outputs/artifacts" "artifacts")"
+DEFAULT_CACHE_DIR="$(resolve_dir_default "outputs/cache" "cache")"
 
-MIND_VEC_TRAIN="${MIND_VEC_TRAIN:-MINDlarge/train/entity_embedding.vec}"
-MIND_VEC_VAL="${MIND_VEC_VAL:-MINDlarge/val/entity_embedding.vec}"
-MIND_VEC_TEST="${MIND_VEC_TEST:-MINDlarge/test/entity_embedding.vec}"
+DATA_ROOT="${DATA_ROOT:-$DEFAULT_DATA_ROOT}"
+ARTIFACTS_DIR="${ARTIFACTS_DIR:-$DEFAULT_ARTIFACTS_DIR}"
+CACHE_DIR="${CACHE_DIR:-$DEFAULT_CACHE_DIR}"
+
+DEFAULT_MIND_VEC_TRAIN="$(resolve_file_default "data/mind/MINDlarge/train/entity_embedding.vec" "MINDlarge/train/entity_embedding.vec")"
+DEFAULT_MIND_VEC_VAL="$(resolve_file_default "data/mind/MINDlarge/val/entity_embedding.vec" "MINDlarge/val/entity_embedding.vec")"
+DEFAULT_MIND_VEC_TEST="$(resolve_file_default "data/mind/MINDlarge/test/entity_embedding.vec" "MINDlarge/test/entity_embedding.vec")"
+
+MIND_VEC_TRAIN="${MIND_VEC_TRAIN:-$DEFAULT_MIND_VEC_TRAIN}"
+MIND_VEC_VAL="${MIND_VEC_VAL:-$DEFAULT_MIND_VEC_VAL}"
+MIND_VEC_TEST="${MIND_VEC_TEST:-$DEFAULT_MIND_VEC_TEST}"
 
 OUT_INIT_DIR="${OUT_INIT_DIR:-$ARTIFACTS_DIR/entities_mindlarge_union}"
 OUT_TRAIN_DIR="${OUT_TRAIN_DIR:-$ARTIFACTS_DIR/no_entity_train_mindlarge}"

@@ -76,6 +76,30 @@ def _now_id() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
+def _default_base_data_root() -> Path:
+    preferred = Path("data/work/adressa_one_week_mind_final")
+    legacy = Path("adressa_one_week_mind_final")
+    if legacy.exists() and not preferred.exists():
+        return legacy
+    return preferred
+
+
+def _default_sweep_root() -> Path:
+    preferred = Path("outputs/artifacts/sweeps")
+    legacy = Path("artifacts/sweeps")
+    if legacy.exists() and not preferred.exists():
+        return legacy
+    return preferred
+
+
+def _default_cache_dir() -> Path:
+    preferred = Path("outputs/cache")
+    legacy = Path("cache")
+    if legacy.exists() and not preferred.exists():
+        return legacy
+    return preferred
+
+
 def _json_dumps(obj: Any) -> str:
     return json.dumps(obj, ensure_ascii=False, indent=2, sort_keys=True)
 
@@ -540,7 +564,7 @@ def parse_args() -> argparse.Namespace:
             "save all logs/metrics per run, and select best config (SEEN priority)."
         )
     )
-    p.add_argument("--base_data_root", type=Path, default=Path("adressa_one_week_mind_final"))
+    p.add_argument("--base_data_root", type=Path, default=_default_base_data_root())
     p.add_argument(
         "--splits",
         type=str,
@@ -550,7 +574,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--out_dir",
         type=Path,
-        default=Path("artifacts/sweeps") / _now_id(),
+        default=_default_sweep_root() / _now_id(),
         help="Root output directory for this sweep (will be created).",
     )
     p.add_argument(
@@ -674,7 +698,7 @@ def main() -> None:
             "DATA_ROOT": str(data_root),
             "ARTIFACTS_DIR": str(artifacts_dir),
             # keep shared cache for speed (wikidata + huggingface).
-            "CACHE_DIR": "cache",
+            "CACHE_DIR": str(_default_cache_dir()),
             # isolate 04-07 outputs
             "OUT_INIT_DIR": str(out_init_small),
             "OUT_TRAIN_DIR": str(out_train_small),

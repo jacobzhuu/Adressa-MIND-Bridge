@@ -48,7 +48,7 @@ def parse_args() -> argparse.Namespace:
             "then regenerate summary CSVs and best_config/best_run without re-running training."
         )
     )
-    p.add_argument("sweep_dir", type=Path, help="e.g. artifacts/sweeps/20260119_231633")
+    p.add_argument("sweep_dir", type=Path, help="e.g. outputs/artifacts/sweeps/20260119_231633")
     p.add_argument(
         "--out_dir",
         type=Path,
@@ -210,4 +210,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
