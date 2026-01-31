@@ -1,5 +1,15 @@
-data/
-outputs/
+# Ignore large generated artifacts by default.
+data/*
+outputs/*
+
+# Keep the final publishable dataset (train/test only, full coverage).
+!data/work/
+data/work/*
+!data/work/adressa_one_week_mind_final_std_no_val/
+!data/work/adressa_one_week_mind_final_std_no_val/**
+
+# Keep the "best metrics" report used in the writeup/table.
+!outputs/eval_reco_best_transe_test.json
 MINDlarge/
 MINDsmall/
 adressa_one_week/

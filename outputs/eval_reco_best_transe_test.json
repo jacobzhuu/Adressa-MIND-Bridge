@@ -1,0 +1,77 @@
+{
+  "time": "2026-01-31 03:14:24",
+  "duration_sec": 5.7852232456207275,
+  "inputs": {
+    "behaviors_tsv": {
+      "path": "data/work/adressa_one_week_mind_final/test/behaviors.tsv",
+      "sha1": "d246e417c2b8cb22bd7f8bd8216404320dc715a6"
+    },
+    "news_tsv": [
+      {
+        "path": "data/work/adressa_one_week_mind_final/train/news.tsv",
+        "sha1": "2756baf4d836ee19d5a9e8ebdde3735792fc1a2b"
+      },
+      {
+        "path": "data/work/adressa_one_week_mind_final/test/news.tsv",
+        "sha1": "a20ddfe5bfb83d8e9da225083b8f49ed26899bc6"
+      }
+    ],
+    "entity_vocab": {
+      "path": "outputs/artifacts/sota_transe_reco/20260127_124952/init_entities_mindlarge/entity_vocab.txt",
+      "sha1": "283c4f5990826d0dc30c519d57bb845212527625"
+    },
+    "entity_matrices": [
+      {
+        "name": "init",
+        "path": "outputs/artifacts/sota_transe_reco/20260127_124952/init_entities_mindlarge/entity_init.npy",
+        "sha1": "0e53228add85f719ce3eded246effe83e74734ba"
+      },
+      {
+        "name": "transe",
+        "path": "outputs/artifacts/sota_transe_reco/20260127_124952/promoted/nei1_k200/entity_trained.npy",
+        "sha1": "cc24bb474972dc2cdfa2098ada7b21a712d6e3a0"
+      }
+    ]
+  },
+  "config": {
+    "entity_weight": "confidence",
+    "score": "cosine",
+    "tie_mode": "expected",
+    "max_history": 0,
+    "max_impressions": null
+  },
+  "stats": {
+    "num_news": 9469.0,
+    "news_with_entities": 4672.0,
+    "sum_entities_per_news": 6394.0,
+    "impressions_total": 315517.0,
+    "init_history_items_total": 1236957.0,
+    "init_history_items_missing_news": 56781.0,
+    "init_history_items_used": 665735.0,
+    "users_seen": 129778.0
+  },
+  "metrics": {
+    "init": {
+      "AUC": 0.5651438749734563,
+      "MRR": 0.5603061993840597,
+      "AUC_user_nonzero": 0.5782062111423114,
+      "MRR_user_nonzero": 0.581087499502932,
+      "AUC_pos_has_vec": 0.6017342411805177,
+      "MRR_pos_has_vec": 0.6254395493444034,
+      "AUC_user_nonzero_pos_has_vec": 0.6191338748930401,
+      "MRR_user_nonzero_pos_has_vec": 0.6543048193375773,
+      "n_impressions": 315517
+    },
+    "transe": {
+      "AUC": 0.6461830899761344,
+      "MRR": 0.6167255664685742,
+      "AUC_user_nonzero": 0.6754950193670144,
+      "MRR_user_nonzero": 0.6488198064395646,
+      "AUC_pos_has_vec": 0.7446976346943133,
+      "MRR_pos_has_vec": 0.7244446869584706,
+      "AUC_user_nonzero_pos_has_vec": 0.7865483347594653,
+      "MRR_user_nonzero_pos_has_vec": 0.7702428313717381,
+      "n_impressions": 315517
+    }
+  }
+}

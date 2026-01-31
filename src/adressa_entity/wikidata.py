@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import requests
+import threading
 from requests import Response
 
 
@@ -50,7 +51,7 @@ class WikidataSearcher:
     ) -> None:
         self._cache_db_path = Path(cache_db_path)
         self._cache_db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._conn = sqlite3.connect(self._cache_db_path)
+        self._conn = sqlite3.connect(self._cache_db_path, check_same_thread=False)
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS search_cache (
@@ -65,28 +66,37 @@ class WikidataSearcher:
         )
         self._conn.commit()
 
-        self._session = requests.Session()
-        self._session.trust_env = bool(trust_env)
-        self._session.headers.update({"User-Agent": user_agent})
+        self._db_lock = threading.Lock()
+        self._local = threading.local()
+        self._user_agent = user_agent
+        self._trust_env = bool(trust_env)
         self._sleep_seconds = float(sleep_seconds)
         self._max_retries = int(max_retries)
         self._retry_base_sleep_seconds = float(retry_base_sleep_seconds)
         self._retry_max_sleep_seconds = float(retry_max_sleep_seconds)
         self._timeout_seconds = float(timeout_seconds)
 
+    def _get_session(self) -> requests.Session:
+        if not hasattr(self._local, "session"):
+            self._local.session = requests.Session()
+            self._local.session.trust_env = self._trust_env
+            self._local.session.headers.update({"User-Agent": self._user_agent})
+        return self._local.session
+
     def close(self) -> None:
         self._conn.close()
-        self._session.close()
+        # Sessions in threads will be GC'd, no global close needed.
 
     def search(self, query: str, *, lang: str = "nb", limit_n: int = 10) -> list[dict[str, Any]]:
         query = query.strip()
         if not query:
             return []
 
-        cached = self._conn.execute(
-            "SELECT response_json FROM search_cache WHERE query=? AND lang=? AND limit_n=?",
-            (query, lang, limit_n),
-        ).fetchone()
+        with self._db_lock:
+            cached = self._conn.execute(
+                "SELECT response_json FROM search_cache WHERE query=? AND lang=? AND limit_n=?",
+                (query, lang, limit_n),
+            ).fetchone()
         if cached is not None:
             return json.loads(cached[0])
 
@@ -106,7 +116,7 @@ class WikidataSearcher:
             try:
                 if self._sleep_seconds > 0:
                     time.sleep(self._sleep_seconds)
-                resp = self._session.get(
+                resp = self._get_session().get(
                     "https://www.wikidata.org/w/api.php",
                     params=params,
                     timeout=self._timeout_seconds,
@@ -128,6 +138,24 @@ class WikidataSearcher:
             except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
                 if attempt >= self._max_retries:
                     raise
+
+                # Check for Retry-After or specific maxlag
+                wait_time = None
+                if isinstance(e, requests.exceptions.HTTPError) and e.response is not None:
+                    retry_after = e.response.headers.get("Retry-After")
+                    if retry_after:
+                        try:
+                            wait_time = float(retry_after) + 1.0
+                        except ValueError:
+                            pass
+                
+                if wait_time is None and "Wikidata maxlag" in str(e):
+                    wait_time = 5.0
+
+                if wait_time is not None:
+                    time.sleep(wait_time)
+                    continue
+
                 base = min(self._retry_base_sleep_seconds * (2**attempt), self._retry_max_sleep_seconds)
                 jitter = random.uniform(0.0, base / 2)
                 time.sleep(base + jitter)
@@ -136,11 +164,12 @@ class WikidataSearcher:
         if results is None:
             results = []
 
-        self._conn.execute(
-            "INSERT OR REPLACE INTO search_cache(query, lang, limit_n, response_json, created_at) VALUES (?, ?, ?, ?, ?)",
-            (query, lang, limit_n, json.dumps(results, ensure_ascii=False), int(time.time())),
-        )
-        self._conn.commit()
+        with self._db_lock:
+            self._conn.execute(
+                "INSERT OR REPLACE INTO search_cache(query, lang, limit_n, response_json, created_at) VALUES (?, ?, ?, ?, ?)",
+                (query, lang, limit_n, json.dumps(results, ensure_ascii=False), int(time.time())),
+            )
+            self._conn.commit()
         return results
 
     def best_candidate(self, mention_surface: str, *, lang: str = "nb", limit_n: int = 10) -> WikidataCandidate | None:
